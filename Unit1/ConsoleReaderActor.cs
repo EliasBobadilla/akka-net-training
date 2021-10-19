@@ -6,6 +6,8 @@ namespace Unit1
     internal class ConsoleReaderActor : UntypedActor
     {
         private readonly IActorRef _child;
+        public const string StartCommand = "start";
+        public const string ExitCommand = "exit";
 
         public ConsoleReaderActor(IActorRef child)
         {
@@ -14,12 +16,53 @@ namespace Unit1
 
         protected override void OnReceive(object message)
         {
-            var read = Console.ReadLine();
-            if(read.IsExitCommand(Context)) return;
-            
-            _child.Tell(read);
-            Self.Tell("continue");
+            if (message.Equals(StartCommand))
+            {
+                DoPrintInstructions();
+            }
+            else if (message is Messages.InputError error)
+            {
+                _child.Tell(error);
+            }
+
+            GetAndValidateInput();
         }
 
+
+        private static void DoPrintInstructions()
+        {
+            Console.WriteLine("Write whatever you want into the console!");
+            Console.WriteLine("Some entries will pass validation, and some won't...\n\n");
+            Console.WriteLine("Type 'exit' to quit this application at any time.\n");
+        }
+
+        private void GetAndValidateInput()
+        {
+            var message = Console.ReadLine();
+            if (string.IsNullOrEmpty(message))
+            {
+                Self.Tell(new Messages.NullInputError("No input received."));
+            }
+            else if (string.Equals(message, ExitCommand, StringComparison.OrdinalIgnoreCase))
+            {
+                // shut down the entire actor system (allows the process to exit)
+                Context.System.Terminate();
+            }
+            else
+            {
+                var valid = IsValid(message);
+                if (valid)
+                {
+                    _child.Tell(new Messages.InputSuccess("Thank you! Message was valid."));
+                    Self.Tell(new Messages.ContinueProcessing());
+                }
+                else
+                {
+                    Self.Tell(new Messages.ValidationError("Invalid: input had odd number of characters."));
+                }
+            }
+        }
+
+        private static bool IsValid(string message) => message.Length % 2 == 0;
     }
 }

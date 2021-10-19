@@ -11,9 +11,16 @@ namespace Unit1
                 return false;
 
             if (!string.Equals(message, "exit", StringComparison.OrdinalIgnoreCase)) return false;
-            
+
             context.System.Terminate();
             return true;
+        }
+
+        public static void Print(this string message, ConsoleColor color = ConsoleColor.White)
+        {
+            Console.ForegroundColor = color;
+            Console.WriteLine(message);
+            Console.ResetColor();
         }
     }
 }
