@@ -2,13 +2,13 @@
 
 namespace Unit1
 {
-    public class ValidationActor: UntypedActor
+    public class ValidationActor : UntypedActor
     {
-        private readonly IActorRef _consoleWriterActor;
+        private readonly IActorRef _child;
 
-        public ValidationActor(IActorRef consoleWriterActor)
+        public ValidationActor(IActorRef child)
         {
-            _consoleWriterActor = consoleWriterActor;
+            _child = child;
         }
 
         protected override void OnReceive(object message)
@@ -16,9 +16,7 @@ namespace Unit1
             var msg = message as string;
             if (string.IsNullOrEmpty(msg))
             {
-                // signal that the user needs to supply an input
-                _consoleWriterActor.Tell(
-                    new Messages.NullInputError("No input received."));
+                _child.Tell(new Messages.NullInputError("No input received."));
             }
             else
             {
@@ -26,19 +24,18 @@ namespace Unit1
                 if (valid)
                 {
                     // send success to console writer
-                    _consoleWriterActor.Tell(new Messages.InputSuccess("Thank you! Message was valid."));
+                    _child.Tell(new Messages.InputSuccess("Thank you! Message was valid."));
                 }
                 else
                 {
                     // signal that input was bad
-                    _consoleWriterActor.Tell(new Messages.ValidationError("Invalid: input had odd number of characters."));
+                    _child.Tell(new Messages.ValidationError("Invalid: input had odd number of characters."));
                 }
             }
 
             // tell sender to continue doing its thing
             // (whatever that may be, this actor doesn't care)
             Sender.Tell(new Messages.ContinueProcessing());
-
         }
 
         /// <summary>
