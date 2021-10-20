@@ -11,22 +11,18 @@ namespace Unit1
             {
                 case Messages.InputError error:
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(error.Reason);
+                    error.Reason.Print(ConsoleColor.Red);
                     break;
                 }
                 case Messages.InputSuccess success:
                 {
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine(success.Reason);
+                    success.Reason.Print(ConsoleColor.Green);
                     break;
                 }
                 default:
-                    Console.WriteLine(message);
+                    message.ToString().Print();
                     break;
             }
-
-            Console.ResetColor();
         }
     }
 }

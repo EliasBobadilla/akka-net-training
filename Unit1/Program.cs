@@ -1,23 +1,21 @@
-﻿using System;
-using Akka.Actor;
+﻿using Akka.Actor;
 
 namespace Unit1
 {
     internal static class Program
     {
         private static ActorSystem _system;
-
-        private static void Main(string[] args)
+        private static IActorRef _writer;
+        private static void Main()
         {
             _system = ActorSystem.Create("systemActor");
-            var writer = _system.ActorOf(Props.Create(() => new ConsoleWriterActor()), "WriterActor");
-            var coordinator = _system.ActorOf(Props.Create(() => new TailCoordinatorActor()),"TailCoordinatorActor");
-            var validator = _system.ActorOf(Props.Create(() => new FileValidatorActor(writer)),"ValidatorActor");
+            _writer = _system.ActorOf(Props.Create(() => new ConsoleWriterActor()), "WriterActor");
+            _system.ActorOf(Props.Create(() => new TailCoordinatorActor()),"TailCoordinatorActor");
+            _system.ActorOf(Props.Create(() => new FileValidatorActor(_writer)),"ValidatorActor");
+
             var reader = _system.ActorOf(Props.Create(() => new ConsoleReaderActor()), "ReaderActor");
-            
             reader.Tell(ConsoleReaderActor.StartCommand);
             _system.WhenTerminated.Wait();
         }
-        // C:\Users\yuri.bobadilla\Downloads\akka_file_demo.txt
     }
 }
