@@ -11,7 +11,7 @@ namespace Unit1
             Context.ActorOf(Props.Create(
                 () => new TailActor(msg.ReporterActor, msg.FilePath)));
         }
-        
+
         public class StartTail
         {
             public StartTail(string filePath, IActorRef reporterActor)
@@ -24,7 +24,7 @@ namespace Unit1
 
             public IActorRef ReporterActor { get; private set; }
         }
-        
+
         public class StopTail
         {
             public StopTail(string filePath)
@@ -32,27 +32,23 @@ namespace Unit1
                 FilePath = filePath;
             }
 
-            public string FilePath { get; private set; }
+            private string FilePath { get; set; }
         }
-        
+
         protected override SupervisorStrategy SupervisorStrategy()
         {
-            return new OneForOneStrategy (
+            return new OneForOneStrategy(
                 10, // maxNumberOfRetries
                 TimeSpan.FromSeconds(30), // withinTimeRange
                 x => // localOnlyDecider
                 {
-                    //Maybe we consider ArithmeticException to not be application critical
-                    //so we just ignore the error and keep going.
-                    if (x is ArithmeticException) return Directive.Resume;
-
-                    //Error that we cannot recover from, stop the failing actor
-                    else if (x is NotSupportedException) return Directive.Stop;
-
-                    //In all other cases, just restart the failing actor
-                    else return Directive.Restart;
+                    return x switch
+                    {
+                        ArithmeticException => Directive.Resume,
+                        NotSupportedException => Directive.Stop,
+                        _ => Directive.Restart
+                    };
                 });
         }
-        
     }
 }
