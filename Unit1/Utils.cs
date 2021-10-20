@@ -5,15 +5,14 @@ namespace Unit1
 {
     public static class Utils
     {
-        public static bool IsExitCommand(this string message, IUntypedActorContext context)
+        public static bool IsNullOrEmptyOrWhiteSpace(this string value)
         {
-            if (string.IsNullOrEmpty(message) || string.IsNullOrWhiteSpace(message))
-                return false;
+            return string.IsNullOrEmpty(value) || string.IsNullOrWhiteSpace(value);
+        }
 
-            if (!string.Equals(message, "exit", StringComparison.OrdinalIgnoreCase)) return false;
-
-            context.System.Terminate();
-            return true;
+        public static bool IsEquals(this string firstValue, string secondValue)
+        {
+            return string.Equals(firstValue, secondValue, StringComparison.OrdinalIgnoreCase);
         }
 
         public static void Print(this string message, ConsoleColor color = ConsoleColor.White)
