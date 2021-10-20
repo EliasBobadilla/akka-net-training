@@ -6,13 +6,11 @@ namespace Unit1
     public class FileValidatorActor : UntypedActor
     {
         private readonly IActorRef _consoleWriterActor;
-        private readonly IActorRef _tailCoordinatorActor;
 
-        public FileValidatorActor(IActorRef consoleWriterActor,
-            IActorRef tailCoordinatorActor)
+        public FileValidatorActor(IActorRef consoleWriterActor)
+             
         {
             _consoleWriterActor = consoleWriterActor;
-            _tailCoordinatorActor = tailCoordinatorActor;
         }
 
         protected override void OnReceive(object message)
@@ -37,7 +35,8 @@ namespace Unit1
                         string.Format("Starting processing for {0}", msg)));
 
                     // start coordinator
-                    _tailCoordinatorActor.Tell(new TailCoordinatorActor.StartTail(msg,
+                    var coordinator = Context.ActorSelection("akka://systemActor/user/TailCoordinatorActor");
+                    coordinator.Tell(new TailCoordinatorActor.StartTail(msg,
                         _consoleWriterActor));
                 }
                 else
