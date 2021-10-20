@@ -9,31 +9,30 @@ namespace Unit1
         public const string StartCommand = "start";
         private const string ExitCommand = "exit";
 
-
         protected override void OnReceive(object message)
         {
             if (message.Equals(StartCommand))
             {
                 DoPrintInstructions();
             }
-            GetAndValidateInput("ValidatorActor");
+            
+            GetAndValidateInput();
         }
-
-
+        
         private static void DoPrintInstructions()
         {
-            Console.WriteLine("Please provide the URI of a log file on disk.\n");
+            "Please provide the URI of a log file on disk.\n".Print();
         }
 
-        private void GetAndValidateInput(string actor)
+        private static void GetAndValidateInput()
         {
             var message = Console.ReadLine();
-            if (!string.IsNullOrEmpty(message) && string.Equals(message, ExitCommand, StringComparison.OrdinalIgnoreCase))
+            if (!message.IsNullOrEmptyOrWhiteSpace() && message.IsEquals(ExitCommand))
             {
                 Context.System.Terminate();
                 return;
             }
-            var childActor = Context.ActorSelection($"akka://systemActor/user/{actor}");
+            var childActor = Context.ActorSelection("akka://systemActor/user/ValidatorActor");
             childActor.Tell(message);
         }
     }

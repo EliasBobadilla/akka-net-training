@@ -18,11 +18,7 @@ namespace Unit1
             var msg = message as string;
             if (string.IsNullOrEmpty(msg))
             {
-                // signal that the user needs to supply an input
                 _consoleWriterActor.Tell(new Messages.NullInputError("Input was blank. Please try again.\n"));
-
-                // tell sender to continue doing its thing (whatever that may be,
-                // this actor doesn't care)
                 Sender.Tell(new Messages.ContinueProcessing());
             }
             else
@@ -30,23 +26,18 @@ namespace Unit1
                 var valid = IsFileUri(msg);
                 if (valid)
                 {
-                    // signal successful input
                     _consoleWriterActor.Tell(new Messages.InputSuccess(
-                        string.Format("Starting processing for {0}", msg)));
+                        $"Starting processing for {msg}"));
 
-                    // start coordinator
                     var coordinator = Context.ActorSelection("akka://systemActor/user/TailCoordinatorActor");
                     coordinator.Tell(new TailCoordinatorActor.StartTail(msg,
                         _consoleWriterActor));
                 }
                 else
                 {
-                    // signal that input was bad
                     _consoleWriterActor.Tell(new Messages.ValidationError(
-                        string.Format("{0} is not an existing URI on disk.", msg)));
+                        $"{msg} is not an existing URI on disk."));
 
-                    // tell sender to continue doing its thing (whatever that
-                    // may be, this actor doesn't care)
                     Sender.Tell(new Messages.ContinueProcessing());
                 }
             }

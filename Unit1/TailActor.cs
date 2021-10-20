@@ -25,7 +25,7 @@ namespace Unit1
                 FileName = fileName;
             }
 
-            public string FileName { get; private set; }
+            private string FileName { get; set; }
         }
 
         public class FileError
@@ -36,12 +36,12 @@ namespace Unit1
                 Reason = reason;
             }
 
-            public string FileName { get; private set; }
+            private string FileName { get; set; }
 
             public string Reason { get; private set; }
         }
 
-        public class InitialRead
+        private class InitialRead
         {
             public InitialRead(string fileName, string text)
             {
@@ -49,23 +49,19 @@ namespace Unit1
                 Text = text;
             }
 
-            public string FileName { get; private set; }
+            private string FileName { get; set; }
             public string Text { get; private set; }
         }
 
         protected override void PreStart()
         {
-            // start watching file for changes
             _observer = new FileObserver(Self, Path.GetFullPath(_filePath));
             _observer.Start();
 
-            // open the file stream with shared read/write permissions
-            // (so file can be written to while open)
             _fileStream = new FileStream(Path.GetFullPath(_filePath),
                 FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             _fileStreamReader = new StreamReader(_fileStream, Encoding.UTF8);
 
-            // read the initial contents of the file and send it to console as first msg
             var text = _fileStreamReader.ReadToEnd();
             Self.Tell(new InitialRead(_filePath, text));
         }
@@ -73,26 +69,28 @@ namespace Unit1
 
         protected override void OnReceive(object message)
         {
-            if (message is FileWrite)
+            switch (message)
             {
-                // move file cursor forward
-                // pull results from cursor to end of file and write to output
-                // (this is assuming a log file type format that is append-only)
-                var text = _fileStreamReader.ReadToEnd();
-                if (!string.IsNullOrEmpty(text))
+                case FileWrite:
                 {
-                    _reporterActor.Tell(text);
+                    var text = _fileStreamReader.ReadToEnd();
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        _reporterActor.Tell(text);
+                    }
+
+                    break;
                 }
-            }
-            else if (message is FileError)
-            {
-                var fe = message as FileError;
-                _reporterActor.Tell(string.Format("Tail error: {0}", fe.Reason));
-            }
-            else if (message is InitialRead)
-            {
-                var ir = message as InitialRead;
-                _reporterActor.Tell(ir.Text);
+                case FileError error:
+                {
+                    _reporterActor.Tell($"Tail error: {error.Reason}");
+                    break;
+                }
+                case InitialRead read:
+                {
+                    _reporterActor.Tell(read.Text);
+                    break;
+                }
             }
         }
         
